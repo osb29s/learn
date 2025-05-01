@@ -1,0 +1,11 @@
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: jdbc:postgresql://localhost:5432/learn
+    username: postgres
+    password: postgres
+  jpa:
+    hibernate.ddl-auto: none
+    open-in-view: false

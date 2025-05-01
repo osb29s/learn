@@ -1,0 +1,7 @@
+bot:
+  token: ${BOT_TOKEN}
+  username: ${BOT_USERNAME}
+
+spring:
+  application:
+    name: learning-system
