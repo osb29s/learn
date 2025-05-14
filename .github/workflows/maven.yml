@@ -42,6 +42,10 @@ jobs:
     - name: Push Docker image to Docker Hub
       run: |
         docker push valera3450zhma/bot-learn:latest  # Push to Docker Hub
+
+    - name: Trigger redeploy on Render
+      run: |
+        curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
   test:
     name: Run tests
     runs-on: ubuntu-latest
