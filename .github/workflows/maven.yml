@@ -1,6 +1,6 @@
 # .github/workflows/ci-cd.yml
 
-name: CI / CD Pipeline
+name: CI/CD Pipeline
 
 on:
   workflow_dispatch:
@@ -14,28 +14,24 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-and-deploy:
-    name: 🏗️ Build, Test & Deploy
+  build-and-test:
+    name: Build & Test
     runs-on: ubuntu-latest
-    environment: production
     env:
-      BOT_TOKEN:       ${{ secrets.BOT_TOKEN }}
-      BOT_USERNAME:    ${{ secrets.BOT_USERNAME }}
-      SPRING_PROFILES_ACTIVE: test
-      IMAGE_NAME:      yourdockerhubusername/your-image-name:latest
-      RENDER_HOOK:     ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+      BOT_TOKEN:    ${{ secrets.BOT_TOKEN }}
+      BOT_USERNAME: ${{ secrets.BOT_USERNAME }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up JDK 21 and cache Maven
+      - name: Set up JDK 21 & cache Maven
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
 
-      - name: Cache Maven local repo
+      - name: Cache Maven dependencies
         uses: actions/cache@v3
         with:
           path: ~/.m2/repository
@@ -43,11 +39,36 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-m2-
 
-      - name: Run tests
+      - name: Run tests (profile':' test)
         run: mvn test -Dspring.profiles.active=test --batch-mode
 
       - name: Package application
         run: mvn package -DskipTests --batch-mode
+
+      - name: Upload JAR for Docker build
+        uses: actions/upload-artifact@v3
+        with:
+          name: spring-boot-jar
+          path: target/*.jar
+
+  docker-deploy:
+    name: Build & Deploy Docker
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    environment: production
+    env:
+      IMAGE_NAME:  valera3450zhma/bot-learn:latest
+      RENDER_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download JAR artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: spring-boot-jar
+          path: target/
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
